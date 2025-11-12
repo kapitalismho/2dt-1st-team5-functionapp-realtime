@@ -176,9 +176,9 @@ def send_to_eventhub(message_data):
     Raises:
         Exception: Event Hub 전송 실패 시
     """
-    connection_string = os.environ.get("EVENT_HUB_CONNECTION_STRING")
+    connection_string = os.environ.get("EventHubConnectionString")
     if not connection_string:
-        raise ValueError("EVENT_HUB_CONNECTION_STRING environment variable is not set")
+        raise ValueError("EventHubConnectionString environment variable is not set")
 
     try:
         producer = EventHubProducerClient.from_connection_string(
