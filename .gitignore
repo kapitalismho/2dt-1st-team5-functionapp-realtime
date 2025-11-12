@@ -134,4 +134,5 @@ __queuestorage__
 __azurite_db*__.json
 .python_packages
 
-CLAUDE.md
+*.md
+!readme.md
