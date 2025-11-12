@@ -2,4 +2,13 @@
 # Ref: aka.ms/functions-azure-monitor-python
 # azure-monitor-opentelemetry
 
+# Core dependencies
 azure-functions
+requests
+azure-eventhub
+
+# Development dependencies (optional)
+# pytest
+# pytest-mock
+# requests-mock
+# pytest-cov
