@@ -6,3 +6,16 @@ __queuestorage__
 local.settings.json
 test
 .venv
+
+# Documentation files (exclude from deployment)
+*.md
+!README.md
+
+# Specification documents
+스펙/
+
+# Test files
+test_*.py
+
+# Deployment scripts
+deploy.sh
