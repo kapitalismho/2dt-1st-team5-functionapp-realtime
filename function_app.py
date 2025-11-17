@@ -38,7 +38,7 @@ def _call_kma_api_internal():
     params = {
         "disp": "1",  # CSV 형식
         "help": "2",  # 데이터만 (헤더 제외)
-        "stn": "98:99:102:108:112:119:201:202:203",  # 관측소 코드
+        "stn": "0",   # 전체 관측소 (후에 필터링)
         "authKey": api_key
     }
 
@@ -171,6 +171,50 @@ def csv_to_batch_json(csv_text):
 # Phase 2.4: 데이터 검증 모듈
 # ============================================================================
 
+# 필요한 관측소 코드 (9개)
+REQUIRED_STATIONS = ["98", "99", "102", "108", "112", "119", "201", "202", "203"]
+
+
+def filter_required_stations(message):
+    """
+    전체 관측소 데이터에서 필요한 9개 관측소만 필터링합니다.
+
+    Args:
+        message (dict): 배치 JSON 메시지 (전체 관측소 포함)
+
+    Returns:
+        dict: 필터링된 배치 JSON 메시지 (9개 관측소만)
+    """
+    original_count = len(message.get("data", []))
+
+    # 필요한 관측소만 필터링
+    filtered_data = [
+        station for station in message.get("data", [])
+        if station.get("STN") in REQUIRED_STATIONS
+    ]
+
+    # 메시지 업데이트
+    message["data"] = filtered_data
+    message["station_count"] = len(filtered_data)
+
+    logging.info(
+        f"관측소 필터링 완료: {original_count}개 → {len(filtered_data)}개 "
+        f"(필터링률: {(original_count - len(filtered_data)) / original_count * 100:.1f}%)"
+    )
+
+    # 필요한 관측소 중 누락된 것이 있는지 확인
+    found_stations = set(station["STN"] for station in filtered_data)
+    missing_stations = set(REQUIRED_STATIONS) - found_stations
+
+    if missing_stations:
+        logging.warning(
+            f"일부 필요 관측소 데이터 누락: {sorted(missing_stations)} "
+            f"(수신: {sorted(found_stations)})"
+        )
+
+    return message
+
+
 def validate_batch_message(message):
     """
     배치 메시지의 필수 필드를 검증합니다.
@@ -271,11 +315,12 @@ def realtime_weather_APIcall_timer_trigger(myTimer: func.TimerRequest) -> None:
 
     매 1분마다 실행되며:
     1. Circuit Breaker 확인 (연속 실패 시 자동 차단)
-    2. 기상청 API 호출 (Rate Limit 429 에러 처리 포함)
+    2. 기상청 API 호출 - 전체 지점 데이터 수신 (Rate Limit 429 에러 처리 포함)
     3. CSV → JSON 변환
     4. 데이터 검증
-    5. 중복 데이터 확인 (동일 데이터 반복 전송 방지)
-    6. Event Hub 전송 (중복이 아닌 경우만)
+    5. 필요한 9개 관측소만 필터링 (98, 99, 102, 108, 112, 119, 201, 202, 203)
+    6. 중복 데이터 확인 (동일 데이터 반복 전송 방지)
+    7. Event Hub 전송 (중복이 아닌 경우만)
     """
     correlation_id = str(uuid.uuid4())
     start_time = datetime.utcnow()
@@ -310,7 +355,12 @@ def realtime_weather_APIcall_timer_trigger(myTimer: func.TimerRequest) -> None:
         if not validate_batch_message(message):
             raise ValueError("데이터 검증 실패")
 
-        # 3.5. 중복 데이터 체크
+        # 3.5. 필요한 관측소만 필터링
+        log_structured("info", "필요한 관측소 필터링 중...",
+                       correlation_id=correlation_id)
+        message = filter_required_stations(message)
+
+        # 4. 중복 데이터 체크
         log_structured("info", "중복 데이터 확인 중...",
                        correlation_id=correlation_id)
         is_duplicate, duplicate_details = is_duplicate_data(message)
