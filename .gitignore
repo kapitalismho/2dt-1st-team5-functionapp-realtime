@@ -134,5 +134,10 @@ __queuestorage__
 __azurite_db*__.json
 .python_packages
 
+
+test_api_call.py
+
 *.md
 !readme.md
+*.csv
+*.json
