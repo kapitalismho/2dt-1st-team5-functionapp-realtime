@@ -134,7 +134,7 @@ def csv_to_batch_json(csv_text):
 
     for line in lines:
         parts = line.strip().split(',')
-        if len(parts) < 12:
+        if len(parts) < 18:
             logging.warning(f"잘못된 CSV 행 (필드 수 부족): {line}")
             continue
 
@@ -143,17 +143,23 @@ def csv_to_batch_json(csv_text):
             collection_time = parts[0].strip()
 
         station_data = {
-            "STN": parts[1].strip(),
-            "TA": parts[2].strip(),
-            "RE": parts[3].strip(),
-            "RN-15m": parts[4].strip(),
-            "RN-60m": parts[5].strip(),
-            "RN-12H": parts[6].strip(),
-            "RN-DAY": parts[7].strip(),
-            "HM": parts[8].strip(),
-            "PA": parts[9].strip(),
-            "PS": parts[10].strip(),
-            "TD": parts[11].strip()
+            "STN": parts[1].strip(),       # 관측소번호
+            "WD": parts[2].strip(),        # 풍향 (0-360도)
+            "WS": parts[3].strip(),        # 풍속 (m/s)
+            "WD_MAX": parts[4].strip(),    # 최대순간풍향
+            "WS_MAX": parts[5].strip(),    # 최대순간풍속
+            "WD_AVG": parts[6].strip(),    # 평균풍향
+            "WS_AVG": parts[7].strip(),    # 평균풍속
+            "TA": parts[8].strip(),        # 기온 (°C)
+            "RE": parts[9].strip(),        # 강수감지
+            "RN-15m": parts[10].strip(),   # 15분강수량 (mm)
+            "RN-60m": parts[11].strip(),   # 60분강수량 (mm)
+            "RN-12H": parts[12].strip(),   # 12시간강수량 (mm)
+            "RN-DAY": parts[13].strip(),   # 일강수량 (mm)
+            "HM": parts[14].strip(),       # 습도 (%)
+            "PA": parts[15].strip(),       # 현지기압 (hPa)
+            "PS": parts[16].strip(),       # 해면기압 (hPa)
+            "TD": parts[17].strip()        # 이슬점온도 (°C)
         }
         data_list.append(station_data)
 

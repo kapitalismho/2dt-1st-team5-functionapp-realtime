@@ -16,6 +16,7 @@ test
 
 # Test files
 test_*.py
+save_json_output.py
 
 # Deployment scripts
 deploy.sh
